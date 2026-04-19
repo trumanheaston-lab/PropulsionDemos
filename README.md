@@ -100,7 +100,7 @@ rocket-equation/
 
 This project is part of [PropulsionDemos](https://github.com/trumanheaston-lab/PropulsionDemos) — a collection of propulsion engineering projects I'm building in high school as I work toward an aerospace engineering career focused on propulsion system design.
 
-I'm particularly interested in liquid rocket engine development and hope to contribute to programs at companies like SpaceX or Rocket Lab. These projects are how I close the gap between classroom physics and real engineering practice.
+I'm particularly interested in liquid rocket engine development as well as advanced propulsion (plasma, fusion, etc) and hope to contribute to programs at companies like SpaceX or Rocket Lab. These projects are how I close the gap between classroom physics and real engineering practice.
 
 ---
 
