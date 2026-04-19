@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rocket Equation Calculator — PropulsionDemos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c0f;
+      --surface: #111318;
+      --surface2: #181b22;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.14);
+      --text: #e8eaf0;
+      --text-muted: #6b7280;
+      --text-dim: #3d4452;
+      --accent: #00e5a0;
+      --accent-dim: rgba(0,229,160,0.12);
+      --accent-border: rgba(0,229,160,0.3);
+      --warn: #ff6b4a;
+      --warn-dim: rgba(255,107,74,0.12);
+      --mono: 'IBM Plex Mono', monospace;
+      --display: 'Syne', sans-serif;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--display);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10,12,15,0.9);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .nav-logo {
+      font-size: 13px;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-tag {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 4rem 2rem 3rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: var(--accent);
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.25rem;
+    }
+    h1 .dim { color: var(--text-muted); font-weight: 400; }
+    .hero-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.7;
+    }
+
+    /* EQUATION BANNER */
+    .eq-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 1.25rem 1.75rem;
+      margin: 2.5rem auto;
+      max-width: 900px;
+      margin-left: 2rem;
+      margin-right: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    @media (min-width: 700px) {
+      .eq-banner { margin-left: auto; margin-right: auto; }
+    }
+    .eq-formula {
+      font-family: var(--mono);
+      font-size: 20px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .eq-formula .acc { color: var(--accent); }
+    .eq-vars {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .eq-var { font-size: 12px; }
+    .eq-var .sym { font-family: var(--mono); color: var(--accent); display: block; font-size: 13px; }
+    .eq-var .def { color: var(--text-muted); }
+
+    /* MAIN LAYOUT */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    /* PANELS */
+    .panel {
+      background: var(--bg);
+      padding: 2rem;
+    }
+    .panel-full {
+      grid-column: 1 / -1;
+      background: var(--bg);
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .panel-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 1.5rem;
+    }
+
+    /* INPUTS */
+    .input-group { margin-bottom: 1.5rem; }
+    .input-group:last-child { margin-bottom: 0; }
+    .input-label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .input-label .sym {
+      color: var(--accent);
+      margin-right: 4px;
+    }
+    .input-wrap { position: relative; }
+    input[type="number"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 48px 10px 14px;
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"]:focus { border-color: var(--accent-border); }
+    input[type="number"].error { border-color: rgba(255,107,74,0.4); }
+    .input-unit {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    /* ISP TOGGLE */
+    .mode-toggle {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 7px 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mode-btn.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    /* PRESETS */
+    .presets-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .presets-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .preset-btn {
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .preset-btn:hover { background: var(--surface2); border-color: var(--border-hover); }
+    .preset-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+    }
+    .preset-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* RESULTS */
+    .dv-hero {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 0.25rem;
+    }
+    .dv-number {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      font-family: var(--mono);
+      line-height: 1;
+      color: var(--accent);
+      transition: color 0.2s;
+    }
+    .dv-number.warn { color: var(--warn); }
+    .dv-unit-label {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .dv-kmps {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 1.75rem;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 1.75rem;
+    }
+    .metric {
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .metric-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .metric-value {
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    /* MASS BAR */
+    .bar-section { margin-bottom: 1.5rem; }
+    .bar-head {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .bar-track {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+      transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .bar-legend {
+      display: flex;
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+    .legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    /* MISSION REF */
+    .mission-section { }
+    .mission-head {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+    .mission-rows { display: flex; flex-direction: column; gap: 8px; }
+    .mission-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mission-name {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      width: 72px;
+      flex-shrink: 0;
+    }
+    .mission-track {
+      flex: 1;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: visible;
+      position: relative;
+    }
+    .mission-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s;
+    }
+    .mission-marker {
+      position: absolute;
+      top: -5px;
+      width: 1px;
+      height: 14px;
+      background: var(--border-hover);
+    }
+    .mission-req {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      width: 64px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ERROR */
+    .error-line {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--warn);
+      min-height: 18px;
+      margin-top: 0.5rem;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .main { grid-template-columns: 1fr; }
+      .panel-full { grid-column: 1; }
+      .eq-banner { flex-direction: column; gap: 1rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="https://github.com/trumanheaston-lab/PropulsionDemos" class="nav-logo">
+    <span>//</span> PropulsionDemos
+  </a>
+  <span class="nav-tag">rocket-equation v1.0</span>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Project 01 — Interactive Tool</div>
+  <h1>Rocket Equation<br><span class="dim">Calculator</span></h1>
+  <p class="hero-desc">
+    Compute delta-v from wet mass, dry mass, and specific impulse.
+    Visualize how mass fractions drive propellant requirements — the same
+    constraint every propulsion engineer works against.
+  </p>
+</div>
+
+<div class="eq-banner">
+  <div class="eq-formula">
+    <span class="acc">Δv</span> = v<sub>e</sub> × ln( m<sub>0</sub> / m<sub>f</sub> )
+  </div>
+  <div class="eq-vars">
+    <div class="eq-var"><span class="sym">Δv</span><span class="def">delta-v (m/s)</span></div>
+    <div class="eq-var"><span class="sym">v<sub>e</sub></span><span class="def">exhaust velocity</span></div>
+    <div class="eq-var"><span class="sym">m<sub>0</sub></span><span class="def">wet mass</span></div>
+    <div class="eq-var"><span class="sym">m<sub>f</sub></span><span class="def">dry mass</span></div>
+  </div>
+</div>
+
+<div style="max-width:900px;margin:0 auto 0;padding:0 2rem 2rem;">
+<div class="main">
+
+  <!-- INPUT PANEL -->
+  <div class="panel">
+    <div class="panel-label">// inputs</div>
+
+    <div class="input-group">
+      <label class="input-label"><span class="sym">m₀</span> Wet mass</label>
+      <div class="input-wrap">
+        <input type="number" id="wet-mass" value="100000" min="1" step="100">
+        <span class="input-unit">kg</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label"><span class="sym">m_f</span> Dry mass</label>
+      <div class="input-wrap">
+        <input type="number" id="dry-mass" value="15000" min="1" step="100">
+        <span class="input-unit">kg</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-isp" onclick="setMode('isp')">Isp (s)</button>
+        <button class="mode-btn" id="btn-ve" onclick="setMode('ve')">v_e (m/s)</button>
+      </div>
+      <label class="input-label" id="prop-label"><span class="sym">Isp</span> Specific impulse</label>
+      <div class="input-wrap">
+        <input type="number" id="prop-input" value="311" min="1" step="1">
+        <span class="input-unit" id="prop-unit-tag">s</span>
+      </div>
+    </div>
+
+    <div class="error-line" id="error-msg"></div>
+  </div>
+
+  <!-- PRESETS PANEL -->
+  <div class="panel" style="border-left:1px solid var(--border);">
+    <div class="panel-label">// vehicle presets</div>
+    <div class="presets-grid">
+      <button class="preset-btn" onclick="loadPreset('falcon9')">
+        <span class="preset-name">Falcon 9 S1</span>
+        <span class="preset-meta">LOX/RP-1 · Isp 282s</span>
+      </button>
+      <button class="preset-btn" onclick="loadPreset('electron')">
+        <span class="preset-name">Electron S1</span>
+        <span class="preset-meta">LOX/RP-1 · Isp 303s</span>
+      </button>
+      <button class="preset-btn" onclick="loadPreset('saturnv')">
+        <span class="preset-name">Saturn V S-IC</span>
+        <span class="preset-meta">LOX/RP-1 · Isp 263s</span>
+      </button>
+      <button class="preset-btn" onclick="loadPreset('lh2')">
+        <span class="preset-name">LOX/LH2 upper</span>
+        <span class="preset-meta">RL-10 class · Isp 450s</span>
+      </button>
+      <button class="preset-btn" onclick="loadPreset('solid')">
+        <span class="preset-name">Solid motor</span>
+        <span class="preset-meta">HTPB · Isp 250s</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS PANEL -->
+  <div class="panel-full">
+    <div class="panel-label">// output</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+
+      <div>
+        <div class="dv-hero">
+          <span class="dv-number" id="dv-ms">—</span>
+          <span class="dv-unit-label">m/s</span>
+        </div>
+        <div class="dv-kmps" id="dv-kms">&nbsp;</div>
+
+        <div class="metrics-grid">
+          <div class="metric">
+            <div class="metric-label">mass ratio</div>
+            <div class="metric-value" id="mass-ratio">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">propellant frac.</div>
+            <div class="metric-value" id="prop-frac">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">exhaust vel.</div>
+            <div class="metric-value" id="ve-display">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">propellant mass</div>
+            <div class="metric-value" id="prop-mass">—</div>
+          </div>
+        </div>
+
+        <div class="bar-section">
+          <div class="bar-head">
+            <span>mass breakdown</span>
+            <span id="bar-pct-label">—</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="prop-bar" style="width:0%"></div>
+          </div>
+          <div class="bar-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> propellant</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--text-dim)"></div> dry mass</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="mission-section">
+          <div class="mission-head">Δv vs. mission requirements</div>
+          <div class="mission-rows">
+            <div class="mission-row">
+              <span class="mission-name">LEO</span>
+              <div class="mission-track">
+                <div class="mission-fill" id="ref-leo" style="width:0%"></div>
+                <div class="mission-marker" id="mk-leo"></div>
+              </div>
+              <span class="mission-req">9,400 m/s</span>
+            </div>
+            <div class="mission-row">
+              <span class="mission-name">GTO</span>
+              <div class="mission-track">
+                <div class="mission-fill" id="ref-gto" style="width:0%"></div>
+                <div class="mission-marker" id="mk-gto"></div>
+              </div>
+              <span class="mission-req">12,000 m/s</span>
+            </div>
+            <div class="mission-row">
+              <span class="mission-name">Trans-lunar</span>
+              <div class="mission-track">
+                <div class="mission-fill" id="ref-tli" style="width:0%"></div>
+                <div class="mission-marker" id="mk-tli"></div>
+              </div>
+              <span class="mission-req">13,500 m/s</span>
+            </div>
+            <div class="mission-row">
+              <span class="mission-name">Mars transit</span>
+              <div class="mission-track">
+                <div class="mission-fill" id="ref-mars" style="width:0%"></div>
+                <div class="mission-marker" id="mk-mars"></div>
+              </div>
+              <span class="mission-req">16,000 m/s</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+          <div class="mission-head">Multi-stage estimate</div>
+          <p style="font-size:12px;color:var(--text-dim);font-family:var(--mono);line-height:1.7;margin-bottom:10px;">
+            For a 2-stage vehicle with equal mass ratios, total Δv ≈ 2× single stage.
+          </p>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-family:var(--mono);font-size:22px;color:var(--text);" id="dv-2stage">—</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">m/s (2-stage est.)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  built by <a href="https://github.com/trumanheaston-lab">trumanheaston-lab</a> ·
+  <a href="https://github.com/trumanheaston-lab/PropulsionDemos">PropulsionDemos</a> ·
+  aiming for propulsion at SpaceX / Rocket Lab
+</footer>
+
+<script>
+  const G0 = 9.80665;
+  let ispMode = true;
+
+  const presets = {
+    falcon9:  { wet: 418100,  dry: 27200,  isp: 282 },
+    electron: { wet: 12500,   dry: 950,    isp: 303 },
+    saturnv:  { wet: 2290000, dry: 135000, isp: 263 },
+    lh2:      { wet: 96000,   dry: 8000,   isp: 450 },
+    solid:    { wet: 45000,   dry: 5000,   isp: 250 },
+  };
+
+  function setMode(mode) {
+    ispMode = mode === 'isp';
+    document.getElementById('btn-isp').classList.toggle('active', ispMode);
+    document.getElementById('btn-ve').classList.toggle('active', !ispMode);
+    const input = document.getElementById('prop-input');
+    const cur = parseFloat(input.value) || 0;
+    const label = document.getElementById('prop-label');
+    const unitTag = document.getElementById('prop-unit-tag');
+    if (ispMode) {
+      input.value = cur > 0 ? Math.round(cur / G0) : '';
+      label.innerHTML = '<span class="sym">Isp</span> Specific impulse';
+      unitTag.textContent = 's';
+    } else {
+      input.value = cur > 0 ? Math.round(cur * G0) : '';
+      label.innerHTML = '<span class="sym">v_e</span> Exhaust velocity';
+      unitTag.textContent = 'm/s';
+    }
+    calculate();
+  }
+
+  function loadPreset(key) {
+    const p = presets[key];
+    ispMode = true;
+    document.getElementById('btn-isp').classList.add('active');
+    document.getElementById('btn-ve').classList.remove('active');
+    document.getElementById('wet-mass').value = p.wet;
+    document.getElementById('dry-mass').value = p.dry;
+    document.getElementById('prop-input').value = p.isp;
+    document.getElementById('prop-label').innerHTML = '<span class="sym">Isp</span> Specific impulse';
+    document.getElementById('prop-unit-tag').textContent = 's';
+    calculate();
+  }
+
+  function fmt(n) {
+    return n >= 1000 ? n.toLocaleString('en-US', { maximumFractionDigits: 0 }) : n.toFixed(0);
+  }
+
+  function calculate() {
+    const m0 = parseFloat(document.getElementById('wet-mass').value);
+    const mf = parseFloat(document.getElementById('dry-mass').value);
+    const propVal = parseFloat(document.getElementById('prop-input').value);
+    const errEl = document.getElementById('error-msg');
+    errEl.textContent = '';
+
+    const inputs = ['wet-mass','dry-mass','prop-input'];
+    inputs.forEach(id => document.getElementById(id).classList.remove('error'));
+
+    if (!m0 || !mf || !propVal) { clear(); return; }
+
+    if (mf >= m0) {
+      errEl.textContent = 'dry mass must be less than wet mass';
+      document.getElementById('dry-mass').classList.add('error');
+      clear(); return;
+    }
+    if (m0 <= 0 || mf <= 0 || propVal <= 0) {
+      errEl.textContent = 'all values must be positive';
+      clear(); return;
+    }
+
+    const ve = ispMode ? propVal * G0 : propVal;
+    const ratio = m0 / mf;
+    const dv = ve * Math.log(ratio);
+    const propMass = m0 - mf;
+    const propFrac = propMass / m0;
+    const dv2 = dv * 2;
+
+    const dvEl = document.getElementById('dv-ms');
+    dvEl.textContent = fmt(dv);
+    dvEl.classList.toggle('warn', dv < 1500);
+    document.getElementById('dv-kms').textContent = '(' + (dv/1000).toFixed(2) + ' km/s)';
+    document.getElementById('mass-ratio').textContent = ratio.toFixed(2) + '×';
+    document.getElementById('prop-frac').textContent = (propFrac*100).toFixed(1) + '%';
+    document.getElementById('ve-display').textContent = fmt(ve) + ' m/s';
+    document.getElementById('prop-mass').textContent = fmt(propMass) + ' kg';
+    document.getElementById('prop-bar').style.width = (propFrac*100).toFixed(1) + '%';
+    document.getElementById('bar-pct-label').textContent = (propFrac*100).toFixed(1) + '% propellant';
+    document.getElementById('dv-2stage').textContent = fmt(dv2);
+
+    const maxRef = 20000;
+    const missions = { leo: 9400, gto: 12000, tli: 13500, mars: 16000 };
+    Object.entries(missions).forEach(([k, req]) => {
+      const fillPct = Math.min((dv / maxRef) * 100, 100).toFixed(1);
+      const markerPct = Math.min((req / maxRef) * 100, 100).toFixed(1);
+      const fillEl = document.getElementById('ref-' + k);
+      fillEl.style.width = fillPct + '%';
+      fillEl.style.background = dv >= req ? 'var(--accent)' : 'var(--warn)';
+      document.getElementById('mk-' + k).style.left = markerPct + '%';
+    });
+  }
+
+  function clear() {
+    document.getElementById('dv-ms').textContent = '—';
+    document.getElementById('dv-kms').innerHTML = '&nbsp;';
+    document.getElementById('dv-2stage').textContent = '—';
+    ['mass-ratio','prop-frac','ve-display','prop-mass'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    document.getElementById('prop-bar').style.width = '0%';
+    document.getElementById('bar-pct-label').textContent = '—';
+    ['leo','gto','tli','mars'].forEach(k => {
+      document.getElementById('ref-' + k).style.width = '0%';
+    });
+  }
+
+  document.getElementById('wet-mass').addEventListener('input', calculate);
+  document.getElementById('dry-mass').addEventListener('input', calculate);
+  document.getElementById('prop-input').addEventListener('input', calculate);
+
+  calculate();
+</script>
+</body>
+</html>
